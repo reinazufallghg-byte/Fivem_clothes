@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Werkbank — FiveM Textur-Studio</title>
+  <meta name="description" content="Textur-Editor mit Live-3D-Vorschau für FiveM YTD/YDD-Assets (als PNG + glTF)." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">WB</span>
+        <div class="brand-text">
+          <h1>Werkbank</h1>
+          <p>Textur-Editor &amp; Live-3D-Vorschau für FiveM-Assets</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <label class="file-btn" for="input-texture">
+          <span class="file-btn-label">Textur laden</span>
+          <span class="file-btn-hint">.png</span>
+        </label>
+        <input id="input-texture" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+
+        <label class="file-btn" for="input-model">
+          <span class="file-btn-label">Modell laden</span>
+          <span class="file-btn-hint">.glb / .gltf</span>
+        </label>
+        <input id="input-model" type="file" accept=".glb,.gltf" hidden />
+
+        <div class="resolution-picker">
+          <label for="select-resolution">Neue Textur</label>
+          <select id="select-resolution">
+            <option value="512">512²</option>
+            <option value="1024" selected>1024²</option>
+            <option value="2048">2048²</option>
+            <option value="4096">4096²</option>
+          </select>
+          <button id="btn-new-canvas" class="ghost-btn" title="Leere Textur in gewählter Auflösung anlegen">Anlegen</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+
+      <!-- ===== LINKE SPALTE: TEXTUR-EDITOR ===== -->
+      <section class="editor-column" aria-label="Textur-Editor">
+
+        <div class="toolbar" role="toolbar" aria-label="Werkzeuge">
+          <div class="tool-group">
+            <button class="tool-btn is-active" data-tool="select" title="Auswählen / Verschieben (V)">
+              <svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L11 19z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="draw" title="Freihand malen (B)">
+              <svg viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="text" title="Text hinzufügen (T)">
+              <svg viewBox="0 0 24 24"><path d="M4 5h16M12 5v14"/></svg>
+            </button>
+          </div>
+
+          <div class="tool-group">
+            <button class="tool-btn" data-shape="rect" title="Rechteck">
+              <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12"/></svg>
+            </button>
+            <button class="tool-btn" data-shape="circle" title="Kreis">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+            </button>
+            <button class="tool-btn" data-shape="triangle" title="Dreieck">
+              <svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/></svg>
+            </button>
+            <button class="tool-btn" data-shape="line" title="Linie">
+              <svg viewBox="0 0 24 24"><path d="M4 20L20 4"/></svg>
+            </button>
+          </div>
+
+          <div class="tool-group">
+            <label class="tool-btn file-tool" title="Bild einfügen">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 17l-6-6-5 5-3-3-3 3"/></svg>
+              <input id="input-insert-image" type="file" accept="image/*" hidden />
+            </label>
+          </div>
+
+          <div class="tool-group">
+            <label class="swatch-label" title="Farbe">
+              <input id="input-color" type="color" value="#c9703c" />
+            </label>
+            <label class="range-label" title="Strichstärke">
+              <span>Stärke</span>
+              <input id="input-stroke-width" type="range" min="1" max="80" value="10" />
+            </label>
+          </div>
+
+          <div class="tool-group">
+            <button class="tool-btn" id="btn-undo" title="Rückgängig (Strg+Z)">
+              <svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 010 10h-1"/></svg>
+            </button>
+            <button class="tool-btn" id="btn-redo" title="Wiederholen (Strg+Y)">
+              <svg viewBox="0 0 24 24"><path d="M15 7l5 5-5 5M20 12H9a5 5 0 000 10h1"/></svg>
+            </button>
+          </div>
+
+          <div class="tool-group tool-group-zoom">
+            <button class="tool-btn" id="btn-zoom-out" title="Verkleinern">−</button>
+            <span id="zoom-readout">100%</span>
+            <button class="tool-btn" id="btn-zoom-in" title="Vergrößern">+</button>
+            <button class="tool-btn" id="btn-zoom-reset" title="Ansicht zurücksetzen">Fit</button>
+          </div>
+        </div>
+
+        <div class="editor-stage" id="editor-stage">
+          <div class="canvas-shell">
+            <canvas id="texture-canvas"></canvas>
+          </div>
+          <p class="stage-empty-hint" id="stage-empty-hint">Lade oben eine PNG-Textur oder klicke „Anlegen“ für eine leere Fläche.</p>
+        </div>
+      </section>
+
+      <!-- ===== SIGNATURE: LIVE-SYNC DIVIDER ===== -->
+      <div class="sync-divider" aria-hidden="true">
+        <div class="sync-track">
+          <span class="sync-dot"></span>
+        </div>
+        <span class="sync-label">LIVE SYNC</span>
+      </div>
+
+      <!-- ===== RECHTE SPALTE: 3D-VORSCHAU ===== -->
+      <aside class="viewer-column" aria-label="3D-Vorschau">
+
+        <div class="panel-block">
+          <h2>Modell</h2>
+          <div class="viewer-stage" id="viewer-stage">
+            <canvas id="viewer-canvas"></canvas>
+            <p class="stage-empty-hint" id="viewer-empty-hint">Kein Modell geladen — lade oben eine .glb / .gltf Datei.</p>
+          </div>
+          <div class="viewer-controls">
+            <label for="select-material">Ziel-Material</label>
+            <select id="select-material">
+              <option value="__all__">Alle Materialien</option>
+            </select>
+          </div>
+          <p class="viewer-hint">Ziehen zum Drehen · Scrollen zum Zoomen · Rechtsklick-Ziehen zum Verschieben</p>
+        </div>
+
+        <div class="panel-block layers-block">
+          <h2>Ebenen</h2>
+          <ul id="layers-list" class="layers-list">
+            <li class="layers-empty">Noch keine Objekte</li>
+          </ul>
+        </div>
+
+        <div class="panel-block export-block">
+          <button id="btn-export" class="export-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+            Textur als PNG exportieren
+          </button>
+        </div>
+      </aside>
+
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
